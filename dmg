@@ -1,0 +1,92 @@
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+
+local player = Players.LocalPlayer
+
+local tracked = {}
+
+local function formatDamage(damage)
+	if math.floor(damage) == damage then
+		return tostring(damage)
+	end
+
+	local str = tostring(damage)
+	local decimal = str:match("%.(%d+)")
+
+	if decimal and #decimal > 3 then
+		str = string.format("%.3f", damage)
+	end
+
+	str = str:gsub("(%..-)0+$", "%1")
+	str = str:gsub("%.$", "")
+
+	return str
+end
+
+local function createDamageMarker(character, damage)
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size = UDim2.new(0, 200, 0, 100)
+	billboard.StudsOffset = Vector3.new(0, 3, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = root
+
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.new(1,0,1,0)
+	text.BackgroundTransparency = 1
+	text.Text = "-" .. formatDamage(damage)
+	text.TextColor3 = Color3.fromRGB(255, 0, 0)
+	text.TextScaled = true
+	text.Font = Enum.Font.GothamBold
+	text.Parent = billboard
+
+	TweenService:Create(text, TweenInfo.new(1), {
+		TextTransparency = 1
+	}):Play()
+
+	Debris:AddItem(billboard, 1)
+end
+
+local function trackHumanoid(humanoid)
+	if tracked[humanoid] then return end
+
+	local character = humanoid.Parent
+	if not character then return end
+
+	if character == player.Character then return end
+
+	tracked[humanoid] = humanoid.Health
+
+	humanoid.HealthChanged:Connect(function(newHealth)
+		local oldHealth = tracked[humanoid]
+		if oldHealth then
+			local diff = oldHealth - newHealth
+
+			if diff > 0 then
+				createDamageMarker(character, diff)
+			end
+		end
+
+		tracked[humanoid] = newHealth
+	end)
+
+	humanoid.Destroying:Connect(function()
+		tracked[humanoid] = nil
+	end)
+end
+
+for _, obj in ipairs(workspace:GetDescendants()) do
+	if obj:IsA("Humanoid") then
+		trackHumanoid(obj)
+	end
+end
+
+workspace.DescendantAdded:Connect(function(obj)
+	if obj:IsA("Humanoid") then
+		trackHumanoid(obj)
+	end
+end)
