@@ -1,6 +1,5 @@
-
 if game.CoreGui:FindFirstChild("HeadCamGui") then
-    game.CoreGui.HeadCamGui:Destroy()
+	game.CoreGui.HeadCamGui:Destroy()
 end
 
 local Players = game:GetService("Players")
@@ -14,272 +13,390 @@ local targetPlayer = nil
 local enabled = false
 local hiddenAccessories = {}
 
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "HeadCamGui"
 gui.ResetOnSpawn = false
-gui.Parent = game.CoreGui
 gui.IgnoreGuiInset = true
+gui.Parent = game.CoreGui
 
 local vignette = Instance.new("ImageLabel")
 vignette.Name = "Vignette"
-vignette.Size = UDim2.new(1, 0, 1, 0)
-vignette.Position = UDim2.new(0, 0, 0, 0)
+vignette.Size = UDim2.new(1,0,1,0)
 vignette.BackgroundTransparency = 1
 vignette.Image = "rbxassetid://126080854275473"
-vignette.ImageTransparency = 1  -- Start invisible
+vignette.ImageTransparency = 1
 vignette.ZIndex = 100
 vignette.Parent = gui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 280, 0, 170)
-frame.Position = UDim2.new(0.5, -140, 0.5, -85)
+frame.Size = UDim2.new(0,280,0,190)
+frame.Position = UDim2.new(0.5,-140,0.5,-95)
 frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.BorderSizePixel = 0
 frame.Active = true
-frame.Draggable = true
-frame.ZIndex = 665
 frame.Parent = gui
 
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
+title.BackgroundColor3 = Color3.fromRGB(40,40,40)
+title.Text = "Pov GUI"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 22
+title.Parent = frame
+
 local textbox = Instance.new("TextBox")
-textbox.Size = UDim2.new(1, -20, 0, 40)
-textbox.Position = UDim2.new(0, 10, 0, 10)
-textbox.PlaceholderText = "Type username..."
+textbox.Size = UDim2.new(1,-20,0,40)
+textbox.Position = UDim2.new(0,10,0,40)
+textbox.PlaceholderText = "username"
 textbox.Text = ""
+textbox.ClearTextOnFocus = false
 textbox.TextColor3 = Color3.new(1,1,1)
 textbox.BackgroundColor3 = Color3.fromRGB(45,45,45)
-textbox.ClearTextOnFocus = false
-textbox.ZIndex = 666
+textbox.Font = Enum.Font.SourceSans
+textbox.TextSize = 22
 textbox.Parent = frame
 
 local suggestionFrame = Instance.new("ScrollingFrame")
-suggestionFrame.Size = UDim2.new(1, -20, 0, 0)
-suggestionFrame.Position = UDim2.new(0, 10, 0, 55)
+suggestionFrame.Size = UDim2.new(1,-20,0,0)
+suggestionFrame.Position = UDim2.new(0,10,0,85)
 suggestionFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 suggestionFrame.BorderSizePixel = 0
 suggestionFrame.ScrollBarThickness = 4
 suggestionFrame.Visible = false
-suggestionFrame.ZIndex = 201
+suggestionFrame.CanvasSize = UDim2.new(0,0,0,0)
 suggestionFrame.Parent = frame
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Padding = UDim.new(0, 2)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Parent = suggestionFrame
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0,2)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = suggestionFrame
 
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(1, -20, 0, 40)
-toggleButton.Position = UDim2.new(0, 10, 0, 110)
-toggleButton.Text = "Toggle Camera"
-toggleButton.TextColor3 = Color3.new(1,1,1)
+toggleButton.Size = UDim2.new(1,-20,0,40)
+toggleButton.Position = UDim2.new(0,10,0,140)
 toggleButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
-toggleButton.ZIndex = 201
+toggleButton.TextColor3 = Color3.new(1,1,1)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 22
+toggleButton.Text = "Toggle Camera"
 toggleButton.Parent = frame
 
-local function hideAccessories(character)
-    hiddenAccessories = {}
-    for _, item in pairs(character:GetChildren()) do
-        if item:IsA("Accessory") then
-            for _, part in pairs(item:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    hiddenAccessories[part] = part.LocalTransparencyModifier
-                end
-            end
-        end
-    end
-end
+
+
+local dragging = false
+local dragStart
+local startPos
+
+title.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+	end
+end)
+
+title.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+		local delta = input.Position - dragStart
+
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+
 
 local function restoreAccessories()
-    for part, old in pairs(hiddenAccessories) do
-        if part and part.Parent then
-            part.LocalTransparencyModifier = old
-        end
-    end
-    hiddenAccessories = {}
+
+	for part, old in pairs(hiddenAccessories) do
+		if part and part.Parent then
+			part.LocalTransparencyModifier = old
+		end
+	end
+
+	hiddenAccessories = {}
 end
 
-local function forceHideAccessories()
-    for part, _ in pairs(hiddenAccessories) do
-        if part and part.Parent then
-            part.LocalTransparencyModifier = 1
-        end
-    end
+local function hideAccessories(character)
+
+	restoreAccessories()
+
+	for _, item in pairs(character:GetChildren()) do
+		if item:IsA("Accessory") then
+
+			for _, part in pairs(item:GetDescendants()) do
+				if part:IsA("BasePart") then
+
+					hiddenAccessories[part] = part.LocalTransparencyModifier
+					part.LocalTransparencyModifier = 1
+				end
+			end
+		end
+	end
 end
+
+
 
 local function findClosestPlayer(input)
-    local text = string.lower(input)
-    local bestMatch = nil
-    local bestScore = math.huge
-    
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player then
-            local score = 0
-            local plrName = string.lower(plr.Name)
-            
-            if plrName == text then return plr end
-            
-            if string.sub(plrName, 1, #text) == text then
-                score = 0.1
-            elseif string.find(plrName, text, 1, true) then
-                score = 0.5
-            else
-                local minLen = math.min(#text, #plrName)
-                for i = 1, minLen do
-                    if string.sub(text, i, i) == string.sub(plrName, i, i) then
-                        score = score + 1
-                    end
-                end
-                score = (#text - score) / #text
-            end
-            
-            if score < bestScore then
-                bestScore = score
-                bestMatch = plr
-            end
-        end
-    end
-    
-    return bestMatch
+
+	local text = string.lower(input)
+	local bestMatch = nil
+	local bestScore = math.huge
+
+	for _, plr in pairs(Players:GetPlayers()) do
+
+		if plr ~= player then
+
+			local plrName = string.lower(plr.Name)
+			local score = 999
+
+			if plrName == text then
+				return plr
+			end
+
+			if string.sub(plrName,1,#text) == text then
+				score = 0
+			elseif string.find(plrName,text,1,true) then
+				score = 1
+			end
+
+			if score < bestScore then
+				bestScore = score
+				bestMatch = plr
+			end
+		end
+	end
+
+	return bestMatch
 end
 
-local function updateCamera()
-    if not enabled or not targetPlayer or not targetPlayer.Character then
-        vignette.ImageTransparency = 1  -- Disable vignette if not spectating
-        return
-    end
-
-    local head = targetPlayer.Character:FindFirstChild("Head")
-    if not head then 
-        vignette.ImageTransparency = 1
-        return 
-    end
-
-    camera.CameraType = Enum.CameraType.Scriptable
-    camera.CFrame = head.CFrame * CFrame.new(0, 0, -0.1)
-    camera.FieldOfView = 80
-    forceHideAccessories()
-
-    local humanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        local hpPercent = humanoid.Health / humanoid.MaxHealth
-        vignette.ImageTransparency = hpPercent 
-    else
-        vignette.ImageTransparency = 1
-    end
-end
+--------------------------------------------------
+-- Suggestions
+--------------------------------------------------
 
 local function updateSuggestions()
-    local text = string.lower(textbox.Text)
-    if text == "" then
-        suggestionFrame.Visible = false
-        return
-    end
 
-    suggestionFrame:ClearAllChildren()
+	local text = string.lower(textbox.Text)
 
-    local found = {}
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and string.find(string.lower(plr.Name), text, 1, true) then
-            table.insert(found, plr)
-        end
-    end
+	for _, child in pairs(suggestionFrame:GetChildren()) do
+		if not child:IsA("UIListLayout") then
+			child:Destroy()
+		end
+	end
 
-    if #found == 0 then
-        suggestionFrame.Visible = false
-        return
-    end
+	if text == "" then
+		suggestionFrame.Visible = false
+		return
+	end
 
-    table.sort(found, function(a,b) return string.lower(a.Name) < string.lower(b.Name) end)
+	local found = {}
 
-    for i, plr in ipairs(found) do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 28)
-        btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.Text = "  " .. plr.Name
-        btn.TextXAlignment = Enum.TextXAlignment.Left
-        btn.Font = Enum.Font.SourceSans
-        btn.TextSize = 15
-        btn.AutoButtonColor = true
-        btn.ZIndex = 202
-        btn.Parent = suggestionFrame
+	for _, plr in pairs(Players:GetPlayers()) do
 
-        btn.MouseButton1Click:Connect(function()
-            textbox.Text = plr.Name
-            suggestionFrame.Visible = false
-            textbox.CursorPosition = #plr.Name + 1
-            textbox:CaptureFocus()
-        end)
+		if plr ~= player then
 
-        btn.MouseEnter:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(70,70,90)
-        end)
-        btn.MouseLeave:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        end)
-    end
+			if string.find(string.lower(plr.Name), text, 1, true) then
+				table.insert(found, plr)
+			end
+		end
+	end
 
-    local height = math.min(#found * 30, 150)
-    suggestionFrame.CanvasSize = UDim2.new(0,0,0, #found * 30)
-    suggestionFrame.Size = UDim2.new(1, -20, 0, height)
-    suggestionFrame.Visible = true
+	if #found == 0 then
+		suggestionFrame.Visible = false
+		return
+	end
+
+	table.sort(found,function(a,b)
+		return a.Name:lower() < b.Name:lower()
+	end)
+
+	for _, plr in pairs(found) do
+
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(1,0,0,28)
+		btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+		btn.TextColor3 = Color3.new(1,1,1)
+		btn.Text = "  "..plr.Name
+		btn.TextXAlignment = Enum.TextXAlignment.Left
+		btn.Font = Enum.Font.SourceSans
+		btn.TextSize = 18
+		btn.Parent = suggestionFrame
+
+		btn.MouseEnter:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(70,70,90)
+		end)
+
+		btn.MouseLeave:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+		end)
+
+		btn.MouseButton1Click:Connect(function()
+
+			textbox.Text = plr.Name
+			suggestionFrame.Visible = false
+
+			textbox:CaptureFocus()
+			textbox.CursorPosition = #plr.Name + 1
+		end)
+	end
+
+	local height = math.min(#found * 30, 120)
+
+	suggestionFrame.Visible = true
+	suggestionFrame.Size = UDim2.new(1,-20,0,height)
+	suggestionFrame.CanvasSize = UDim2.new(0,0,0,#found * 30)
+
+	toggleButton.Position = UDim2.new(0,10,0,90 + height)
+	frame.Size = UDim2.new(0,280,0,145 + height)
 end
 
 textbox:GetPropertyChangedSignal("Text"):Connect(updateSuggestions)
 
 textbox.Focused:Connect(function()
-    if textbox.Text ~= "" then
-        updateSuggestions()
-    end
+	if textbox.Text ~= "" then
+		updateSuggestions()
+	end
 end)
 
-textbox.FocusLost:Connect(function(enterPressed)
-    suggestionFrame.Visible = false
+textbox.FocusLost:Connect(function()
+	task.wait(0.1)
+	suggestionFrame.Visible = false
 end)
 
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
-    if input.KeyCode == Enum.KeyCode.Return then
-        if textbox:IsFocused() then
-            local closest = findClosestPlayer(textbox.Text)
-            if closest then
-                textbox.Text = closest.Name
-                suggestionFrame.Visible = false
-            end
-        end
-    end
-end)
+
+
+local function disableCamera()
+
+	enabled = false
+	targetPlayer = nil
+
+	restoreAccessories()
+
+	camera.CameraType = Enum.CameraType.Custom
+	camera.FieldOfView = 70
+
+	vignette.ImageTransparency = 1
+
+	toggleButton.Text = "Toggle Camera"
+	toggleButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
+end
+
+local function updateCamera()
+
+	if not enabled then
+		return
+	end
+
+	if not targetPlayer
+	or not targetPlayer.Character
+	or not targetPlayer.Character.Parent then
+
+		disableCamera()
+		return
+	end
+
+	local head = targetPlayer.Character:FindFirstChild("Head")
+	local humanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+	if not head or not humanoid then
+		disableCamera()
+		return
+	end
+
+	camera.CameraType = Enum.CameraType.Scriptable
+
+	camera.CFrame =
+		CFrame.lookAt(
+			head.Position,
+			head.Position + head.CFrame.LookVector
+		)
+
+	camera.FieldOfView = 80
+
+	local hpPercent =
+		math.clamp(
+			humanoid.Health / math.max(humanoid.MaxHealth,1),
+			0,
+			1
+		)
+
+	vignette.ImageTransparency = hpPercent
+end
+
 
 toggleButton.MouseButton1Click:Connect(function()
-    if not enabled then
-        local name = textbox.Text
-        local found = Players:FindFirstChild(name)
-        
-        if not found then
-            found = findClosestPlayer(name)
-        end
 
-        if found and found.Character and found.Character:FindFirstChild("Head") then
-            targetPlayer = found
-            enabled = true
-            hideAccessories(found.Character)
-            toggleButton.Text = "Disable Camera"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(170,70,70)
-            textbox.Text = found.Name
-        else
-            toggleButton.Text = "Player not found!"
-            task.wait(1.2)
-            toggleButton.Text = "Toggle Camera"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
-        end
-    else
-        enabled = false
-        restoreAccessories()
-        targetPlayer = nil
-        camera.CameraType = Enum.CameraType.Custom
-        camera.FieldOfView  = 70
-        vignette.ImageTransparency = 1
-        toggleButton.Text = "Toggle Camera"
-        toggleButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
-    end
+	if not enabled then
+
+		local found = Players:FindFirstChild(textbox.Text)
+
+		if not found then
+			found = findClosestPlayer(textbox.Text)
+		end
+
+		if found
+		and found.Character
+		and found.Character:FindFirstChild("Head") then
+
+			targetPlayer = found
+			enabled = true
+
+			hideAccessories(found.Character)
+
+			textbox.Text = found.Name
+
+			toggleButton.Text = "Disable Camera"
+			toggleButton.BackgroundColor3 = Color3.fromRGB(170,70,70)
+
+		else
+
+			toggleButton.Text = "Player not found!"
+
+			task.wait(1)
+
+			if not enabled then
+				toggleButton.Text = "Toggle Camera"
+			end
+		end
+
+	else
+		disableCamera()
+	end
+end)
+
+
+UserInputService.InputBegan:Connect(function(input,gpe)
+
+	if gpe then
+		return
+	end
+
+	if UserInputService:GetFocusedTextBox() ~= textbox then
+		return
+	end
+
+	if input.KeyCode == Enum.KeyCode.Return then
+
+		local closest = findClosestPlayer(textbox.Text)
+
+		if closest then
+			textbox.Text = closest.Name
+			suggestionFrame.Visible = false
+		end
+	end
 end)
 
 RunService.RenderStepped:Connect(updateCamera)
