@@ -1,0 +1,240 @@
+
+if game.CoreGui:FindFirstChild("AnimSoundButton") then
+	game.CoreGui.AnimSoundButton:Destroy()
+end
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+
+local currentLight = nil
+local gfire = nil
+
+local animationId = "rbxassetid://129573518974922"
+local soundId = "rbxassetid://140228055649564"
+local startTime = 21.5
+
+local animationId2 = "rbxassetid://139447612907348"
+local soundId2 = "rbxassetid://118968956615621"
+local sound2Speed = 0.2
+
+local manjiAnimId = "rbxassetid://82987093810211"
+
+local currentTrack = nil
+local currentSound = nil
+
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "AnimSoundButton"
+gui.Parent = game.CoreGui
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,220,0,230)
+frame.Position = UDim2.new(0.5,-110,0.5,-115)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Active = true
+frame.Parent = gui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,25)
+title.BackgroundColor3 = Color3.fromRGB(50,50,50)
+title.Text = "прышок южи"
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = frame
+
+local playButton = Instance.new("TextButton")
+playButton.Size = UDim2.new(1,-20,0,40)
+playButton.Position = UDim2.new(0,10,0,35)
+playButton.Text = "play"
+playButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
+playButton.TextColor3 = Color3.new(1,1,1)
+playButton.Parent = frame
+
+local playButton2 = Instance.new("TextButton")
+playButton2.Size = UDim2.new(1,-20,0,40)
+playButton2.Position = UDim2.new(0,10,0,80)
+playButton2.Text = "play 2"
+playButton2.BackgroundColor3 = Color3.fromRGB(70,70,70)
+playButton2.TextColor3 = Color3.new(1,1,1)
+playButton2.Parent = frame
+
+local playButton3 = Instance.new("TextButton")
+playButton3.Size = UDim2.new(1,-20,0,40)
+playButton3.Position = UDim2.new(0,10,0,125)
+playButton3.Text = "manji kick"
+playButton3.BackgroundColor3 = Color3.fromRGB(70,70,70)
+playButton3.TextColor3 = Color3.new(1,1,1)
+playButton3.Parent = frame
+
+local stopButton = Instance.new("TextButton")
+stopButton.Size = UDim2.new(1,-20,0,35)
+stopButton.Position = UDim2.new(0,10,0,170)
+stopButton.Text = "Stop"
+stopButton.BackgroundColor3 = Color3.fromRGB(120,60,60)
+stopButton.TextColor3 = Color3.new(1,1,1)
+stopButton.Parent = frame
+
+
+local dragging = false
+local dragStart
+local startPos
+
+title.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+	end
+end)
+
+title.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+
+local function stopAll()
+	if currentTrack then
+		currentTrack:Stop()
+		currentTrack = nil
+	end
+
+	if currentSound then
+		currentSound:Stop()
+		currentSound:Destroy()
+		currentSound = nil
+	end
+
+	if currentLight then
+		currentLight:Destroy()
+		currentLight = nil
+	end
+
+	if gfire then
+		gfire:Destroy()
+		gfire = nil
+	end
+end
+
+
+playButton.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+
+	stopAll()
+
+	local anim = Instance.new("Animation")
+	anim.AnimationId = animationId
+
+	currentTrack = animator:LoadAnimation(anim)
+	currentTrack:Play()
+	currentTrack:AdjustSpeed(0.835)
+
+	currentSound = Instance.new("Sound")
+	currentSound.SoundId = soundId
+	currentSound.Volume = 1
+	currentSound.Parent = workspace
+	currentSound.TimePosition = startTime
+	currentSound:Play()
+end)
+
+
+playButton2.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+
+	stopAll()
+
+	local anim = Instance.new("Animation")
+	anim.AnimationId = animationId2
+
+	currentTrack = animator:LoadAnimation(anim)
+	currentTrack:Play()
+	currentTrack:AdjustSpeed(0.975)
+
+	currentSound = Instance.new("Sound")
+	currentSound.SoundId = soundId2
+	currentSound.Volume = 1
+	currentSound.TimePosition = 0.5
+	currentSound.PlaybackSpeed = sound2Speed
+	currentSound.Looped = true
+	currentSound.Parent = workspace
+	currentSound:Play()
+
+	local head = character:FindFirstChild("Head")
+	if head then
+		currentLight = Instance.new("PointLight")
+		currentLight.Color = Color3.fromRGB(0, 100, 0)
+		currentLight.Brightness = 2
+		currentLight.Range = 10
+		currentLight.Parent = head
+	end
+
+	local torso = character:FindFirstChild("Torso")
+	if torso then
+		gfire = Instance.new("Fire")
+		gfire.Color = Color3.fromRGB(0, 100, 0)
+		gfire.SecondaryColor = Color3.fromRGB(0, 100, 0)
+		gfire.Size = 20
+		gfire.Heat = 25
+		gfire.Parent = torso
+	end
+end)
+
+
+playButton3.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+
+	stopAll()
+
+	local anim = Instance.new("Animation")
+	anim.AnimationId = manjiAnimId
+
+	currentTrack = animator:LoadAnimation(anim)
+	currentTrack:Play()
+
+	local thisTrack = currentTrack
+	task.delay(1, function()
+		if thisTrack and thisTrack.IsPlaying then
+			thisTrack:Stop()
+			if currentTrack == thisTrack then
+				currentTrack = nil
+			end
+		end
+	end)
+end)
+
+
+stopButton.MouseButton1Click:Connect(stopAll)
