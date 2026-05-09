@@ -1,0 +1,186 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local old = playerGui:FindFirstChild("VFXSlider")
+if old then
+	old:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "VFXSlider"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,320,0,120)
+frame.Position = UDim2.new(0.5,-160,0.5,-60)
+frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+frame.Parent = gui
+
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
+title.BackgroundColor3 = Color3.fromRGB(25,25,25)
+title.Text = "VFX Amount"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.SourceSansBold
+title.TextScaled = true
+title.Parent = frame
+
+local dragging = false
+local dragStart
+local startPos
+
+title.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+	end
+end)
+
+title.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		
+		local delta = input.Position - dragStart
+		
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+		
+	end
+	
+end)
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(1,0,0,30)
+label.Position = UDim2.new(0,0,0,30)
+label.BackgroundTransparency = 1
+label.Text = "VFX: 100%"
+label.TextColor3 = Color3.new(1,1,1)
+label.Font = Enum.Font.SourceSansBold
+label.TextScaled = true
+label.Parent = frame
+
+local sliderBar = Instance.new("Frame")
+sliderBar.Size = UDim2.new(1,-40,0,10)
+sliderBar.Position = UDim2.new(0,20,0.7,0)
+sliderBar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+sliderBar.Parent = frame
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(1,0,1,0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+sliderFill.Parent = sliderBar
+
+local knob = Instance.new("Frame")
+knob.Size = UDim2.new(0,16,0,16)
+knob.AnchorPoint = Vector2.new(0.5,0.5)
+knob.Position = UDim2.new(1,0,0.5,0)
+knob.BackgroundColor3 = Color3.new(1,1,1)
+knob.Parent = sliderBar
+
+local vfxScale = 1
+
+local function applyParticle(p)
+
+	if not p:GetAttribute("OriginalRate") then
+		p:SetAttribute("OriginalRate", p.Rate)
+	end
+
+	p.Rate = p:GetAttribute("OriginalRate") * vfxScale
+
+end
+
+local function applyObject(obj)
+
+	if obj:IsA("ParticleEmitter") then
+
+		applyParticle(obj)
+
+		obj:GetPropertyChangedSignal("Rate"):Connect(function()
+			task.defer(function()
+				applyParticle(obj)
+			end)
+		end)
+
+	elseif obj:IsA("Trail") or obj:IsA("Beam") then
+
+		obj.Enabled = vfxScale > 0.2
+
+	end
+
+end
+
+local function applyAll()
+
+	for _,v in ipairs(workspace:GetDescendants()) do
+		applyObject(v)
+	end
+
+end
+
+workspace.DescendantAdded:Connect(function(obj)
+
+	task.defer(function()
+		applyObject(obj)
+	end)
+
+end)
+
+local sliderDragging = false
+
+local function updateSlider(x)
+
+	local percent = math.clamp(
+		(x - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X,
+		0,
+		1
+	)
+
+	vfxScale = percent
+
+	sliderFill.Size = UDim2.new(percent,0,1,0)
+	knob.Position = UDim2.new(percent,0,0.5,0)
+
+	label.Text = "VFX: "..math.floor(percent*100).."%"
+
+	applyAll()
+
+end
+
+knob.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		sliderDragging = true
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		sliderDragging = false
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+
+	if sliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		updateSlider(input.Position.X)
+	end
+
+end)
+
+task.wait()
+updateSlider(sliderBar.AbsolutePosition.X + sliderBar.AbsoluteSize.X)
