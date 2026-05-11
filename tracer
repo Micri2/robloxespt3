@@ -46,7 +46,6 @@ end)
 
 RunService.RenderStepped:Connect(function()
     local viewport = Camera.ViewportSize
-    line.Color = plr.TeamColor.Color
     local bottom = Vector2.new(viewport.X / 2, viewport.Y)
 
     for plr, line in pairs(tracers) do
@@ -62,12 +61,17 @@ RunService.RenderStepped:Connect(function()
             if onScreen and distance <= MAX_DISTANCE then
                 line.Visible = true
 
+                -- live team color updating
+                line.Color = plr.TeamColor.Color
+
                 line.From = bottom
                 line.To = Vector2.new(pos.X, pos.Y)
 
-                line.Transparency = math.clamp(1 - (distance / MAX_DISTANCE), 0.2, 1)
-
-
+line.Transparency = math.clamp(
+    0.7 - (distance / MAX_DISTANCE),
+    0.15,
+    0.7
+)
             else
                 line.Visible = false
             end
