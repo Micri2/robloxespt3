@@ -1,0 +1,78 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+
+local LocalPlayer = Players.LocalPlayer
+
+local TRACER_COLOR = Color3.fromRGB(255,255,255)
+local TRACER_THICKNESS = 1.5
+local MAX_DISTANCE = 1000
+
+local tracers = {}
+
+local function createTracer(plr)
+    local line = Drawing.new("Line")
+
+    line.Visible = false
+    line.Color = plr.TeamColor.Color
+    line.Thickness = TRACER_THICKNESS
+    line.Transparency = 0.5
+
+    tracers[plr] = line
+end
+
+local function removeTracer(plr)
+    if tracers[plr] then
+        tracers[plr]:Remove()
+        tracers[plr] = nil
+    end
+end
+
+for _, plr in ipairs(Players:GetPlayers()) do
+    if plr ~= LocalPlayer then
+        createTracer(plr)
+    end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    if plr ~= LocalPlayer then
+        createTracer(plr)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    removeTracer(plr)
+end)
+
+RunService.RenderStepped:Connect(function()
+    local viewport = Camera.ViewportSize
+    line.Color = plr.TeamColor.Color
+    local bottom = Vector2.new(viewport.X / 2, viewport.Y)
+
+    for plr, line in pairs(tracers) do
+        local char = plr.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+        if root and hum and hum.Health > 0 then
+            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+
+            local distance = (Camera.CFrame.Position - root.Position).Magnitude
+
+            if onScreen and distance <= MAX_DISTANCE then
+                line.Visible = true
+
+                line.From = bottom
+                line.To = Vector2.new(pos.X, pos.Y)
+
+                line.Transparency = math.clamp(1 - (distance / MAX_DISTANCE), 0.2, 1)
+
+
+            else
+                line.Visible = false
+            end
+        else
+            line.Visible = false
+        end
+    end
+end)
