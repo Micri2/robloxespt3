@@ -61,8 +61,11 @@ RunService.RenderStepped:Connect(function()
             if onScreen and distance <= MAX_DISTANCE then
                 line.Visible = true
 
-                -- live team color updating
-                line.Color = plr.TeamColor.Color
+if LocalPlayer:IsFriendsWith(plr.UserId) then
+    line.Color = Color3.fromRGB(255, 255, 0)
+else
+    line.Color = plr.TeamColor.Color
+end
 
                 line.From = bottom
                 line.To = Vector2.new(pos.X, pos.Y)
