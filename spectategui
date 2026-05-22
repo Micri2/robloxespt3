@@ -1,0 +1,46 @@
+local function updateCamera()
+
+	if not enabled then
+		return
+	end
+
+	if not targetPlayer
+	or not targetPlayer.Character
+	or not targetPlayer.Character.Parent then
+
+		disableCamera()
+		return
+	end
+
+	local head = targetPlayer.Character:FindFirstChild("Head")
+	local humanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+	if not head or not humanoid then
+		disableCamera()
+		return
+	end
+
+	camera.CameraType = Enum.CameraType.Scriptable
+
+	local offset =
+		-head.CFrame.LookVector * 6
+		+ Vector3.new(0, 2, 0)
+
+	local camPos = head.Position + offset
+
+	camera.CFrame = CFrame.lookAt(
+		camPos,
+		head.Position
+	)
+
+	camera.FieldOfView = 75
+
+	local hpPercent =
+		math.clamp(
+			humanoid.Health / math.max(humanoid.MaxHealth,1),
+			0,
+			1
+		)
+
+	vignette.ImageTransparency = hpPercent
+end
