@@ -45,7 +45,6 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 22
 title.Parent = frame
 
--- CLOSE BUTTON
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0,30,0,30)
 closeButton.Position = UDim2.new(1,-30,0,0)
@@ -142,35 +141,6 @@ UserInputService.InputChanged:Connect(function(input)
 		)
 	end
 end)
-
-local function restoreAccessories()
-
-	for part, old in pairs(hiddenAccessories) do
-		if part and part.Parent then
-			part.LocalTransparencyModifier = old
-		end
-	end
-
-	hiddenAccessories = {}
-end
-
-local function hideAccessories(character)
-
-	restoreAccessories()
-
-	for _, item in pairs(character:GetChildren()) do
-		if item:IsA("Accessory") then
-
-			for _, part in pairs(item:GetDescendants()) do
-				if part:IsA("BasePart") then
-
-					hiddenAccessories[part] = part.LocalTransparencyModifier
-					part.LocalTransparencyModifier = 1
-				end
-			end
-		end
-	end
-end
 
 local function findClosestPlayer(input)
 
@@ -299,8 +269,6 @@ local function disableCamera()
 	enabled = false
 	targetPlayer = nil
 
-	restoreAccessories()
-
 	camera.CameraType = Enum.CameraType.Custom
 	camera.FieldOfView = 70
 
@@ -373,8 +341,6 @@ toggleButton.MouseButton1Click:Connect(function()
 
 			targetPlayer = found
 			enabled = true
-
-			hideAccessories(found.Character)
 
 			textbox.Text = found.Name
 
