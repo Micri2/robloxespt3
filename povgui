@@ -13,7 +13,6 @@ local targetPlayer = nil
 local enabled = false
 local hiddenAccessories = {}
 
-
 local gui = Instance.new("ScreenGui")
 gui.Name = "HeadCamGui"
 gui.ResetOnSpawn = false
@@ -45,6 +44,20 @@ title.TextColor3 = Color3.new(1,1,1)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 22
 title.Parent = frame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0,30,0,30)
+closeButton.Position = UDim2.new(1,-30,0,0)
+closeButton.BackgroundColor3 = Color3.fromRGB(170,60,60)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.new(1,1,1)
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 22
+closeButton.Parent = frame
+
+closeButton.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
 
 local textbox = Instance.new("TextBox")
 textbox.Size = UDim2.new(1,-20,0,40)
@@ -83,28 +96,40 @@ toggleButton.TextSize = 22
 toggleButton.Text = "Toggle Camera"
 toggleButton.Parent = frame
 
-
-
 local dragging = false
 local dragStart
 local startPos
 
+local function beginDrag(input)
+	dragging = true
+	dragStart = input.Position
+	startPos = frame.Position
+end
+
+local function endDrag()
+	dragging = false
+end
+
 title.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = frame.Position
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		beginDrag(input)
 	end
 end)
 
 title.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		endDrag()
 	end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+	if dragging and (
+		input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch
+	) then
 
 		local delta = input.Position - dragStart
 
@@ -116,8 +141,6 @@ UserInputService.InputChanged:Connect(function(input)
 		)
 	end
 end)
-
-
 
 local function restoreAccessories()
 
@@ -147,8 +170,6 @@ local function hideAccessories(character)
 		end
 	end
 end
-
-
 
 local function findClosestPlayer(input)
 
@@ -182,10 +203,6 @@ local function findClosestPlayer(input)
 
 	return bestMatch
 end
-
---------------------------------------------------
--- Suggestions
---------------------------------------------------
 
 local function updateSuggestions()
 
@@ -276,8 +293,6 @@ textbox.FocusLost:Connect(function()
 	suggestionFrame.Visible = false
 end)
 
-
-
 local function disableCamera()
 
 	enabled = false
@@ -336,7 +351,6 @@ local function updateCamera()
 	vignette.ImageTransparency = hpPercent
 end
 
-
 toggleButton.MouseButton1Click:Connect(function()
 
 	if not enabled then
@@ -376,7 +390,6 @@ toggleButton.MouseButton1Click:Connect(function()
 		disableCamera()
 	end
 end)
-
 
 UserInputService.InputBegan:Connect(function(input,gpe)
 
