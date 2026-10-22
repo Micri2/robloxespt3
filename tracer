@@ -6,7 +6,7 @@ local LocalPlayer = Players.LocalPlayer
 
 local TRACER_COLOR = Color3.fromRGB(255,255,255)
 local TRACER_THICKNESS = 1.5
-local MAX_DISTANCE = 1000
+local MAX_DISTANCE = 50000
 
 local tracers = {}
 
